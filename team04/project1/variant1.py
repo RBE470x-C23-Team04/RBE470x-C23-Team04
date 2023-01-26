@@ -1,4 +1,4 @@
-# This is necessary to find the main code
+# This is necessary to find the main code Hi
 import sys
 sys.path.insert(0, '../../bomberman')
 sys.path.insert(1, '..')
