@@ -33,6 +33,39 @@ class TestCharacter(CharacterEntity):
                     goal = (x,y)
                     foundGoal = True
         return goal
+    
+    
+    def findCharacterPos(self, wrld, name):
+        """_summary_
+
+        Args:
+            wrld (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        
+        world_width = wrld.width()
+        world_height = wrld.height()
+        for x in range(0,world_width):
+            for y in range(0,world_height):
+                list = wrld.characters_at(x,y)
+                # print(str(list))
+                if list is not None:
+                    for item in list:
+                        if item.name == name:
+                            me_character_pose = (x,y)
+                            print("HERE " + str(me_character_pose))
+        # return 1            
+        return me_character_pose
+        
+        # pose = []
+        
+        # pose = wrld.me(self)
+        # print(pose)
+        # return pose
+        
+        
 
 
     @staticmethod
@@ -122,8 +155,14 @@ class TestCharacter(CharacterEntity):
         # if not foundGoal:
         #     goal = self.findGoal(wrld)
         
+        # print("ME: " + str(wrld.me(self)))
         
-        dx, dy = 0, 0 # starting pos
+        our_pos = self.findCharacterPos(wrld, "me")
+        
+        # i = input("HELLO?")
+        
+        # dx, dy = 0, 0 # starting pos
+        dx, dy = our_pos[0], our_pos[1]
         start = (dx, dy)
         goal = self.findGoal(wrld)
         print("Goal " + str(goal)) 
@@ -135,8 +174,33 @@ class TestCharacter(CharacterEntity):
         
         print(pose_list)
         
+        
+        # Clear past A* path
+        world_width = wrld.width()
+        world_height = wrld.height()
+        for x in range(0,world_width):
+            for y in range(0,world_height):
+                self.set_cell_color(x, y, Fore.BLACK + Back.BLACK)
+        
+        # Draw A* path
         for cell in pose_list:
-            self.set_cell_color(cell[0], cell[1], Fore.RED + Back.RED)
+            self.set_cell_color(cell[0], cell[1], Fore.RED + Back.GREEN)
+        
+        
+        print("Our Pose: " + str(dx) + ", " + str(dy))
+            
+        pose = pose_list[1]
+        move_x = pose[0] - dx
+        move_y = pose[1] - dy
+        
+        print("New Pose: " + str(move_x) + ", " + str(move_y))
+         
+        self.move(move_x, move_y)
+        # wrld.printit()
+        
+        
+
+        
         
         # for x in range(wrld.width()):
         #     self.set_cell_color(x, 0, Fore.RED + Back.RED)
@@ -152,17 +216,18 @@ class TestCharacter(CharacterEntity):
         #         dx += 1
         #     if 'b' == c:
         #         bomb = True
-        for pose in pose_list:
-            print("Pose: " + str(dx) + ", " + str(dy))
-            # i = input("Hold")
+        
+        # for pose in pose_list:
+        #     print("Pose: " + str(dx) + ", " + str(dy))
+        #     # i = input("Hold")
             
-            move_x = pose[0] - dx
-            move_y = pose[1] - dy
+        #     move_x = pose[0] - dx
+        #     move_y = pose[1] - dy
             
-            self.move(move_x, move_y)
-            wrld.printit()
+        #     self.move(move_x, move_y)
+        #     wrld.printit()
             
             
         
            
-        pass
+        
