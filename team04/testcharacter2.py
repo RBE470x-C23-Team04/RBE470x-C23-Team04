@@ -9,17 +9,22 @@ from priority_queue import PriorityQueue
 # from sensed_world import SensedWorld
 import math
 
-class TestCharacter(CharacterEntity):
+class TestCharacter2(CharacterEntity):
 
+    # def __init__(self,name,avatar,x_pos,y_pos):
+    #     '''
+    #     '''
+    #     print("A")
+        
+    #     # wrld = SenseWorld.from_world(w)       
+        
+    #     # self.goal = self.findGoal(wrld)
+    
+    
     def findGoal(self, wrld):
-        """Run once to find world exit.
-
-        Args:
-            wrld (_type_): _description_
-
-        Returns:
-            _type_: _description_
-        """
+        '''
+        Run once to find world exit.
+        '''
         world_width = wrld.width()
         world_height = wrld.height()
         for x in range(0,world_width):
@@ -52,8 +57,32 @@ class TestCharacter(CharacterEntity):
                             me_character_pose = (x,y)
                             print("HERE " + str(me_character_pose))           
         return me_character_pose
+
+
+    def findMonsterPos(self, wrld, name):
+        """_summary_
+
+        Args:
+            wrld (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         
+        world_width = wrld.width()
+        world_height = wrld.height()
+        for x in range(0,world_width):
+            for y in range(0,world_height):
+                list = wrld.monsters_at(x,y)
+                # print(str(list))
+                if list is not None:
+                    for item in list:
+                        if item.name == name:
+                            monster_pose = (x,y)
+                            print("HERE " + str(monster_pose))           
+        return monster_pose
         
+
     @staticmethod
     def euclidean_distance(x1, y1, x2, y2):
         """
@@ -97,7 +126,30 @@ class TestCharacter(CharacterEntity):
                     retNeighbors.append(neighbor)
 
         return retNeighbors
+    
+    
+    @staticmethod
+    def mSpace(wrld, x, y):
         
+        pass
+        
+    
+    def heuristic(self, wrld):
+        # character_to_monster = self.findMonsterPos(wrld, "stupid")
+        m = next(iter(wrld.monsters.values())) #monster
+        c = next(iter(wrld.characters.values())) #charcter
+        dist = TestCharacter2.euclidean_distance(m[0].x,m[0].y,c[0].x,c[0].y)
+        print("Distance to monster: " + str(dist))
+
+        if (dist < 6):
+            dist = 1 / dist * 200
+        else:
+            dist = 0
+        print("Heuristic: " + str(dist)) 
+        
+        
+        return dist
+    
     
     def a_star(self, wrld, start, goal):
         '''
@@ -116,13 +168,19 @@ class TestCharacter(CharacterEntity):
             if current == goal:
                 break
             
-            for next in TestCharacter.neighbors_of_8(wrld, current[0], current[1]):
-                new_cost = cost_so_far[current] + TestCharacter.euclidean_distance(current[0],current[1],next[0],next[1])
+            for next in TestCharacter2.neighbors_of_8(wrld, current[0], current[1]):
+                new_cost = cost_so_far[current] + TestCharacter2.euclidean_distance(current[0],current[1],next[0],next[1]) #+ TestCharacter2.mSpace(next[0],next[1])
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    cost_so_far[next] = new_cost
-                    priority = new_cost
+                    cost_so_far[next] = new_cost 
+                    priority = new_cost + self.heuristic(wrld)
                     frontier.put(next, priority)
                     came_from[next] = current
+                    
+                # print("Next: " + str(next) + ", Cost: " + str(cost_so_far[next]))
+            # wrld.printit()
+            print("Frontier: " + str(frontier.elements))
+            self.mapScore(wrld, frontier.elements)   
+        # print("A star: " + str(came_from))
                     
         return came_from
     
@@ -137,12 +195,42 @@ class TestCharacter(CharacterEntity):
         return findPath
         
     
+    def minimax(self, wrld, character, monster):
+        pass
+    
+    
+    def mapScore(self, wrld, score):
+        elements = score
+        world_width = wrld.width()
+        world_height = wrld.height()
+        spots = {}
+        
+        for x in range(0, world_width):
+            for y in range(0, world_height):
+                for element in elements:
+                    
+        
+        
+        
+        pass
+        
+    
     def do(self, wrld):
         
-        our_pos = self.findCharacterPos(wrld, "me")
+        
+        
+        m = next(iter(wrld.monsters.values()))
+        print("Monster at (" + str(m[0].x) + ", " + str(m[0].y) + ")")
+        c = next(iter(wrld.characters.values()))
+        print("Character at (" + str(c[0].x) + ", " + str(c[0].y) + ")")
+
+        
+        character_pos = self.findCharacterPos(wrld, "me")
+        monster_pos = self.findMonsterPos(wrld, "stupid")
+        
         
         # dx, dy = 0, 0 # starting pos
-        dx, dy = our_pos[0], our_pos[1]
+        dx, dy = character_pos[0], character_pos[1]
         start = (dx, dy)
         goal = self.findGoal(wrld)
         print("Goal " + str(goal)) 
@@ -176,3 +264,4 @@ class TestCharacter(CharacterEntity):
         print("New Pose: " + str(move_x) + ", " + str(move_y))
          
         self.move(move_x, move_y)
+            
