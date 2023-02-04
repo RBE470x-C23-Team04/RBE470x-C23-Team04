@@ -5,8 +5,8 @@ sys.path.insert(0, '../bomberman')
 from entity import CharacterEntity
 from colorama import Fore, Back
 from priority_queue import PriorityQueue
-# from world import World
-# from sensed_world import SensedWorld
+from world import World
+from sensed_world import SensedWorld
 import math
 
 class TestCharacter(CharacterEntity):
@@ -21,6 +21,8 @@ class TestCharacter(CharacterEntity):
     #     # self.goal = self.findGoal(wrld)
     
     
+
+
     def findGoal(self, wrld):
         '''
         Run once to find world exit.
@@ -149,9 +151,40 @@ class TestCharacter(CharacterEntity):
             goal = cfrom
         return findPath
         
-    
+    def minimax(self, wrld, new_wrld, pose_list):
+        m = next(iter(new_wrld.monsters.values()))
+        print(len(m))
+        print(m[0].x, m[0].y)
+        #print(str(m[1].x))
+        print("minimax!")
+        #new_wrld.printit()
+        mini = {}
+        pos = self.findCharacterPos(wrld, "me")
+        for i in TestCharacter.neighbors_of_8(wrld, pos[0], pos[1]):
+            monsters = new_wrld.monsters_at(i[0],i[1])
+            print(i)
+            score = 0
+            #if(m[0].x == i[0] and m[0].y == i[1]):
+            if(monsters != None):
+                score -= 100
+            if i in pose_list:
+                score += 10
+            mini[i] = score
+        max = 0
+        go = (0,0)
+        print("mini: " + str(mini))
+        for i in mini:
+            if mini[i] > max:
+                max = mini[i]
+                go = i
+        print("Go to " + str(go))
+        dx = go[0] - pos[0]
+        dy = go[1] - pos[1]
+        self.move(dx,dy)
+
+
     def do(self, wrld):
-        
+        #m = next(iter(wrld.monsters.values()))
         # if not foundGoal:
         #     goal = self.findGoal(wrld)
         
@@ -159,22 +192,38 @@ class TestCharacter(CharacterEntity):
         
         our_pos = self.findCharacterPos(wrld, "me")
         
+
         # i = input("HELLO?")
         
         # dx, dy = 0, 0 # starting pos
         dx, dy = our_pos[0], our_pos[1]
         start = (dx, dy)
         goal = self.findGoal(wrld)
-        print("Goal " + str(goal)) 
+        #print("Goal " + str(goal)) 
+        
+        
+
         
         cameFrom = self.a_star(wrld, start, goal)
         pose_list = self.find_path(cameFrom, start, goal)
         # pose_list = pose_list.reverse()
         pose_list = list(reversed(pose_list))
         
-        print(pose_list)
-        
-        
+        #print(pose_list)
+        monster = False
+        sw = SensedWorld.next(wrld)
+        new_wrld = sw[0]
+
+        if(new_wrld.monsters_at(dx,dy) != None):
+            self.minimax(wrld, new_wrld, pose_list)
+            monster = True
+
+        for next in self.neighbors_of_8(wrld, dx, dy):
+            monsters = new_wrld.monsters_at(next[0],next[1])
+            if(monsters != None):
+                self.minimax(wrld,new_wrld, pose_list)
+                monster = True
+
         # Clear past A* path
         world_width = wrld.width()
         world_height = wrld.height()
@@ -188,14 +237,14 @@ class TestCharacter(CharacterEntity):
         
         
         print("Our Pose: " + str(dx) + ", " + str(dy))
+        if monster == False:
+            pose = pose_list[1]
+            move_x = pose[0] - dx
+            move_y = pose[1] - dy
             
-        pose = pose_list[1]
-        move_x = pose[0] - dx
-        move_y = pose[1] - dy
-        
-        print("New Pose: " + str(move_x) + ", " + str(move_y))
+            print("New Pose: " + str(move_x) + ", " + str(move_y))
          
-        self.move(move_x, move_y)
+            self.move(move_x, move_y)
         # wrld.printit()
         
         

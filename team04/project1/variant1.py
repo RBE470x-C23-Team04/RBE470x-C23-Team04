@@ -8,7 +8,7 @@ from game import Game
 
 # TODO This is your code!
 sys.path.insert(1, '../team04')
-
+print("hi")
 # Uncomment this if you want the empty test character
 from testcharacter import TestCharacter
 
