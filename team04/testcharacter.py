@@ -112,6 +112,37 @@ class TestCharacter(CharacterEntity):
                     retNeighbors.append(neighbor)
 
         return retNeighbors
+    
+    @staticmethod
+    def neighbors_of_16(wrld, x, y):
+        """_summary_
+
+        Args:
+            wrld (_type_): _description_
+            x (_type_): _description_
+            y (_type_): _description_
+        """
+        
+        allNeighbors = []
+        
+        mapWidth = wrld.width()
+        mapHeight = wrld.height()
+        
+        retNeighbors = []
+        
+        for xi in range(-2,2):
+            for yi in range(-2,2):
+                allNeighbors.append(x+xi, y+yi)
+        print("Neightbors of 16: " + str(allNeighbors))
+        
+        for neighbor in allNeighbors:
+            if(neighbor[0] >= 0) and (neighbor[0] < mapwidth) and (neighbor[1] >= 0) and (neighbor[1] < mapheight):
+                if not wrld.wall_at(neighbor[0],neighbor[1]):
+                    #add the items to ret list
+                    retNeighbors.append(neighbor)
+                    
+        print("retNeighbors: " + str(retNeighbors))
+                
         
     
     def a_star(self, wrld, start, goal):
@@ -192,6 +223,7 @@ class TestCharacter(CharacterEntity):
         
         our_pos = self.findCharacterPos(wrld, "me")
         
+        
 
         # i = input("HELLO?")
         
@@ -218,7 +250,7 @@ class TestCharacter(CharacterEntity):
             self.minimax(wrld, new_wrld, pose_list)
             monster = True
 
-        for next in self.neighbors_of_8(wrld, dx, dy):
+        for next in self.neighbors_of_16(wrld, dx, dy):
             monsters = new_wrld.monsters_at(next[0],next[1])
             if(monsters != None):
                 self.minimax(wrld,new_wrld, pose_list)
