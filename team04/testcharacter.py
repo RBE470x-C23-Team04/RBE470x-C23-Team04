@@ -151,36 +151,57 @@ class TestCharacter(CharacterEntity):
             goal = cfrom
         return findPath
         
-    def minimax(self, wrld, new_wrld, pose_list):
-        m = next(iter(new_wrld.monsters.values()))
-        print(len(m))
-        print(m[0].x, m[0].y)
-        #print(str(m[1].x))
+    def minimax(self, wrld, new_wrld, new_wrld2, pose_list):
+        print("worlds")
+        wrld.printit()
+        new_wrld.printit()
+        new_wrld2.printit()
         print("minimax!")
-        #new_wrld.printit()
+    
         mini = {}
         pos = self.findCharacterPos(wrld, "me")
+        
         for i in TestCharacter.neighbors_of_8(wrld, pos[0], pos[1]):
             monsters = new_wrld.monsters_at(i[0],i[1])
-            print(i)
+            monsters2 = new_wrld2.monsters_at(i[0],i[1])
+
+            explosion = new_wrld.explosion_at(i[0],i[1])
+            explosion2 = new_wrld2.explosion_at(i[0],i[1])
+
+            bomb = wrld.bomb_at(i[0],i[1])
+
+            empty = new_wrld.empty_at(i[0],i[1])
+
             score = 0
-            #if(m[0].x == i[0] and m[0].y == i[1]):
-            if(monsters != None):
+            if(monsters != None or monsters2 != None):
+                #self.place_bomb()
                 score -= 100
             if i in pose_list:
                 score += 10
+            if (explosion != None): #or explosion2 != None): #or bomb != None or explosion2 != None or bomb2 != None):
+                 score -= 50
+            if(bomb == None):
+                score += 90
+
+            #elif(empty):
+                #score += 30
+            
             mini[i] = score
+        print("mini: " + str(mini))
+
         max = 0
         go = (0,0)
-        print("mini: " + str(mini))
         for i in mini:
             if mini[i] > max:
                 max = mini[i]
                 go = i
         print("Go to " + str(go))
-        dx = go[0] - pos[0]
-        dy = go[1] - pos[1]
-        self.move(dx,dy)
+        if(go == (0,0)):
+            self.move(0,0)
+        else:
+            dx = go[0] - pos[0]
+            dy = go[1] - pos[1]
+            self.move(dx,dy)
 
 
     def do(self, wrld):
@@ -214,14 +235,28 @@ class TestCharacter(CharacterEntity):
         sw = SensedWorld.next(wrld)
         new_wrld = sw[0]
 
-        if(new_wrld.monsters_at(dx,dy) != None):
-            self.minimax(wrld, new_wrld, pose_list)
+        sw2 = SensedWorld.next(new_wrld)
+        new_wrld2 = sw2[0]
+
+        if(new_wrld.monsters_at(dx,dy) != None or new_wrld2.monsters_at(dx,dy) != None):
+            self.minimax(wrld, new_wrld, new_wrld2, pose_list)
             monster = True
 
         for next in self.neighbors_of_8(wrld, dx, dy):
             monsters = new_wrld.monsters_at(next[0],next[1])
-            if(monsters != None):
-                self.minimax(wrld,new_wrld, pose_list)
+            monsters2 = new_wrld2.monsters_at(next[0],next[1])
+
+            #explosion = new_wrld.explosion_at(next[0],next[1])
+            #explosion2 = new_wrld2.explosion_at(next[0],next[1])
+
+            #bomb = new_wrld.bomb_at(next[0],next[1])
+            #bomb2 = new_wrld2.bomb_at(next[0],next[1])
+
+            empty = wrld.empty_at(next[0],next[1])
+            #empty2 = new_wrld2.empty_at(next[0],next[1])
+
+            if(monsters != None or monsters2 != None or empty == False): #or empty2 == False):# or explosion != None or bomb != None): or explosion2 != None or bomb2 != None):
+                self.minimax(wrld,new_wrld, new_wrld2, pose_list)
                 monster = True
 
         # Clear past A* path
@@ -245,36 +280,7 @@ class TestCharacter(CharacterEntity):
             print("New Pose: " + str(move_x) + ", " + str(move_y))
          
             self.move(move_x, move_y)
-        # wrld.printit()
-        
-        
-
-        
-        
-        # for x in range(wrld.width()):
-        #     self.set_cell_color(x, 0, Fore.RED + Back.RED)
-        
-        # for c in input("How would you like to move (w=up,a=left,s=down,d=right,b=bomb)? "):
-        #     if 'w' == c:
-        #         dy -= 1
-        #     if 'a' == c:
-        #         dx -= 1
-        #     if 's' == c:
-        #         dy += 1
-        #     if 'd' == c:
-        #         dx += 1
-        #     if 'b' == c:
-        #         bomb = True
-        
-        # for pose in pose_list:
-        #     print("Pose: " + str(dx) + ", " + str(dy))
-        #     # i = input("Hold")
-            
-        #     move_x = pose[0] - dx
-        #     move_y = pose[1] - dy
-            
-        #     self.move(move_x, move_y)
-        #     wrld.printit()
+      
             
             
         
