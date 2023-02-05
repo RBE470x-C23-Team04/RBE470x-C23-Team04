@@ -8,6 +8,7 @@ from priority_queue import PriorityQueue
 from world import World
 from sensed_world import SensedWorld
 import math
+from node import Node
 
 class TestCharacter(CharacterEntity):
 
@@ -67,9 +68,7 @@ class TestCharacter(CharacterEntity):
         # print(pose)
         # return pose
         
-        
-
-
+    
     @staticmethod
     def euclidean_distance(x1, y1, x2, y2):
         """
@@ -84,6 +83,7 @@ class TestCharacter(CharacterEntity):
         out = math.sqrt((x2-x1)**2 + (y2-y1)**2)
         #print(f'{x1-x2}')
         return out
+    
     
     @staticmethod
     def neighbors_of_8(wrld, x, y):
@@ -113,6 +113,7 @@ class TestCharacter(CharacterEntity):
 
         return retNeighbors
     
+    
     @staticmethod
     def neighbors_of_16(wrld, x, y):
         """_summary_
@@ -123,25 +124,31 @@ class TestCharacter(CharacterEntity):
             y (_type_): _description_
         """
         
-        allNeighbors = []
+        allNeighbors = [(x-2, y-2), (x-2, y-1), (x-2, y), (x-2, y+1), (x-2, y+2), (x-1, y-2), (x-1, y+2), (x, y-2),
+                        (x+1, y-2), (x+1, y+2), (x+2, y-2), (x+2, y-1), (x+2, y), (x+2, y+1), (x+2, y+2), (x, y+2)]
         
         mapWidth = wrld.width()
         mapHeight = wrld.height()
         
         retNeighbors = []
         
-        for xi in range(-2,2):
-            for yi in range(-2,2):
-                allNeighbors.append(x+xi, y+yi)
-        print("Neightbors of 16: " + str(allNeighbors))
+        # for xi in range(-2,2):
+        #     for yi in range(-2,2):
+        #         neighbor = [x+xi,y+yi]
+        #         allNeighbors.append(neighbor)
+        # print("Neightbors of 16: " + str(allNeighbors))
+        
+        # print("allNeighbors: " + str(allNeighbors))
         
         for neighbor in allNeighbors:
-            if(neighbor[0] >= 0) and (neighbor[0] < mapwidth) and (neighbor[1] >= 0) and (neighbor[1] < mapheight):
+            if(neighbor[0] >= 0) and (neighbor[0] < mapWidth) and (neighbor[1] >= 0) and (neighbor[1] < mapHeight):
                 if not wrld.wall_at(neighbor[0],neighbor[1]):
                     #add the items to ret list
                     retNeighbors.append(neighbor)
                     
         print("retNeighbors: " + str(retNeighbors))
+        
+        return retNeighbors
                 
         
     
@@ -182,6 +189,7 @@ class TestCharacter(CharacterEntity):
             goal = cfrom
         return findPath
         
+        
     def minimax(self, wrld, new_wrld, pose_list):
         m = next(iter(new_wrld.monsters.values()))
         print(len(m))
@@ -214,6 +222,12 @@ class TestCharacter(CharacterEntity):
         self.move(dx,dy)
 
 
+    def expectimax(self, wrld, new_wrld, pose_list):
+        
+        
+        pass
+    
+
     def do(self, wrld):
         #m = next(iter(wrld.monsters.values()))
         # if not foundGoal:
@@ -223,6 +237,12 @@ class TestCharacter(CharacterEntity):
         
         our_pos = self.findCharacterPos(wrld, "me")
         
+        one = "one"
+        two = "two"
+        three = "three"
+        
+        # for ev in range(0,3):
+        #     print(str(one.[ev]))
         
 
         # i = input("HELLO?")
