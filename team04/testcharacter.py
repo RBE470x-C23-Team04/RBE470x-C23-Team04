@@ -132,17 +132,17 @@ class TestCharacter(CharacterEntity):
         
         for xi in range(-2,2):
             for yi in range(-2,2):
-                allNeighbors.append(x+xi, y+yi)
-        print("Neightbors of 16: " + str(allNeighbors))
+                allNeighbors.append((x+xi, y+yi))
+        #print("Neightbors of 16: " + str(allNeighbors))
         
         for neighbor in allNeighbors:
-            if(neighbor[0] >= 0) and (neighbor[0] < mapwidth) and (neighbor[1] >= 0) and (neighbor[1] < mapheight):
+            if(neighbor[0] >= 0) and (neighbor[0] < mapWidth) and (neighbor[1] >= 0) and (neighbor[1] < mapHeight):
                 if not wrld.wall_at(neighbor[0],neighbor[1]):
                     #add the items to ret list
                     retNeighbors.append(neighbor)
                     
-        print("retNeighbors: " + str(retNeighbors))
-                
+        #print("retNeighbors: " + str(retNeighbors))
+        return retNeighbors
         
     
     def a_star(self, wrld, start, goal):
@@ -181,14 +181,26 @@ class TestCharacter(CharacterEntity):
             findPath.append(cfrom)
             goal = cfrom
         return findPath
+
+    def isMonsterNear(self, wrld, new_wrld, point):
+        x = point[0]
+        y = point[1]
         
+        state = False
+        
+        for i in TestCharacter.neighbors_of_8(wrld, x, y):
+            if (new_wrld.monsters_at(i[0],i[1]) != None):
+                state = True
+                print("Monster nearby " + str(i))
+                
+        return state
+
     def minimax(self, wrld, new_wrld, new_wrld2, pose_list):
-        print("worlds")
-        wrld.printit()
-        new_wrld.printit()
-        new_wrld2.printit()
+       
         print("minimax!")
-    
+        sw3 = SensedWorld.next(new_wrld2)
+        new_wrld3 = sw3[0]
+
         mini = {}
         pos = self.findCharacterPos(wrld, "me")
         
@@ -198,41 +210,36 @@ class TestCharacter(CharacterEntity):
 
             explosion = new_wrld.explosion_at(i[0],i[1])
             explosion2 = new_wrld2.explosion_at(i[0],i[1])
-
-            bomb = wrld.bomb_at(i[0],i[1])
-
-            empty = new_wrld.empty_at(i[0],i[1])
+            
+            bom = wrld.bomb_at(i[0],i[1])
+            bomb = new_wrld.bomb_at(i[0],i[1])
+            bomb2 = new_wrld2.bomb_at(i[0],i[1])
 
             score = 0
-            if(monsters != None or monsters2 != None):
-                #self.place_bomb()
+            if(monsters or monsters2 or self.isMonsterNear(wrld, new_wrld, i)):
+                self.place_bomb()
                 score -= 100
             if i in pose_list:
                 score += 10
-            if (explosion != None): #or explosion2 != None): #or bomb != None or explosion2 != None or bomb2 != None):
+            if (explosion or explosion2): 
                  score -= 50
-            if(bomb == None):
-                score += 90
-
-            #elif(empty):
-                #score += 30
+            if(bomb or bomb2 or bom):
+                score -= 90
             
             mini[i] = score
         print("mini: " + str(mini))
 
-        max = 0
+        max = -1
         go = (0,0)
         for i in mini:
             if mini[i] > max:
                 max = mini[i]
                 go = i
         print("Go to " + str(go))
-        if(go == (0,0)):
-            self.move(0,0)
-        else:
-            dx = go[0] - pos[0]
-            dy = go[1] - pos[1]
-            self.move(dx,dy)
+       
+        dx = go[0] - pos[0]
+        dy = go[1] - pos[1]
+        self.move(dx,dy)
 
 
     def do(self, wrld):
@@ -243,7 +250,7 @@ class TestCharacter(CharacterEntity):
         # print("ME: " + str(wrld.me(self)))
         
         our_pos = self.findCharacterPos(wrld, "me")
-        
+     
         
 
         # i = input("HELLO?")
@@ -253,7 +260,7 @@ class TestCharacter(CharacterEntity):
         start = (dx, dy)
         goal = self.findGoal(wrld)
         #print("Goal " + str(goal)) 
-        
+       
         
 
         
@@ -270,6 +277,7 @@ class TestCharacter(CharacterEntity):
         sw2 = SensedWorld.next(new_wrld)
         new_wrld2 = sw2[0]
 
+
         if(new_wrld.monsters_at(dx,dy) != None or new_wrld2.monsters_at(dx,dy) != None):
             self.minimax(wrld, new_wrld, new_wrld2, pose_list)
             monster = True
@@ -277,17 +285,13 @@ class TestCharacter(CharacterEntity):
         for next in self.neighbors_of_16(wrld, dx, dy):
             monsters = new_wrld.monsters_at(next[0],next[1])
             monsters2 = new_wrld2.monsters_at(next[0],next[1])
+          
+            explosion = new_wrld.explosion_at(next[0],next[1])
+            explosion2 = new_wrld2.explosion_at(next[0],next[1])
 
-            #explosion = new_wrld.explosion_at(next[0],next[1])
-            #explosion2 = new_wrld2.explosion_at(next[0],next[1])
+            bomb = new_wrld.bomb_at(next[0],next[1])
 
-            #bomb = new_wrld.bomb_at(next[0],next[1])
-            #bomb2 = new_wrld2.bomb_at(next[0],next[1])
-
-            empty = wrld.empty_at(next[0],next[1])
-            #empty2 = new_wrld2.empty_at(next[0],next[1])
-
-            if(monsters != None or monsters2 != None or empty == False): #or empty2 == False):# or explosion != None or bomb != None): or explosion2 != None or bomb2 != None):
+            if(monsters or monsters2 or bomb or explosion or explosion2):
                 self.minimax(wrld,new_wrld, new_wrld2, pose_list)
                 monster = True
 
@@ -303,15 +307,16 @@ class TestCharacter(CharacterEntity):
             self.set_cell_color(cell[0], cell[1], Fore.RED + Back.GREEN)
         
         
-        print("Our Pose: " + str(dx) + ", " + str(dy))
+        #print("Our Pose: " + str(dx) + ", " + str(dy))
         if monster == False:
             pose = pose_list[1]
             move_x = pose[0] - dx
             move_y = pose[1] - dy
             
             print("New Pose: " + str(move_x) + ", " + str(move_y))
-         
+            #new_wrld.me(self).move(move_x,move_y)
             self.move(move_x, move_y)
+            
       
             
             
