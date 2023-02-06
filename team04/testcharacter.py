@@ -1,6 +1,7 @@
 # This is necessary to find the main code
 import sys
 sys.path.insert(0, '../bomberman')
+sys.path.insert(1, '..')
 # Import necessary stuff
 from entity import CharacterEntity
 from colorama import Fore, Back
@@ -350,6 +351,7 @@ class TestCharacter(CharacterEntity):
             dx = go[0] - pos[0]
             dy = go[1] - pos[1]
             self.move(dx,dy)
+            
 
 
     def expectimax(self, wrld, new_wrld, pose_list):
@@ -366,6 +368,17 @@ class TestCharacter(CharacterEntity):
         root.placeBomb = Node.newNode(0)
     
         # Assigning values to Leaf nodes
+        root.moveNone.moveNone = Node.newNode(0)
+        root.moveNone.moveN = Node.newNode(0)
+        root.moveNone.moveNE = Node.newNode(0)
+        root.moveNone.moveE = Node.newNode(0)
+        root.moveNone.moveSE = Node.newNode(0)
+        root.moveNone.moveS = Node.newNode(0)
+        root.moveNone.moveSW = Node.newNode(0)
+        root.moveNone.moveW = Node.newNode(0)
+        root.moveNone.moveNW = Node.newNode(0)
+        root.moveNone.placeBomb = Node.newNode(0)
+        
         
         
         
@@ -388,10 +401,31 @@ class TestCharacter(CharacterEntity):
         
         our_pos = self.findCharacterPos(wrld, "me")
         
-        one = "one"
-        two = "two"
-        three = "three"
         
+    
+        print("wrld me")
+        print(self.findCharacterPos(wrld, "me"))
+        sw = SensedWorld.from_world(wrld) # create a dream world of real_world
+        new_wrld_1 = sw[0]
+        print("new_wrld me")
+        print(self.findCharacterPos(new_wrld_1, "me"))
+        # print(new_wrld.findCharacterPos(new_wrld, "me"))        
+        
+        new_wrld_1.me(self).move(1,0) # move character "me" in SenseWorld of real_world
+        sw = SensedWorld.next(new_wrld_1) # advance SenseWorld of new_wrld_1 by 1 step forward (1 step ahead of real_world)
+        new_wrld_1 = sw[0] # overwrite dream world (new_wrld_1)
+        
+        print("wrld me")
+        print(self.findCharacterPos(wrld, "me")) # character position in real_world remains same at start
+        # sw = SensedWorld.next(wrld)
+        # new_wrld = sw[0]
+        print("new_wrld me")
+        print(self.findCharacterPos(new_wrld_1, "me")) # character position in new_wrld_1 advanced one step
+        
+        
+        # one = "one"
+        # two = "two"
+        # three = "three"
         # for ev in range(0,3):
         #     print(str(one.[ev]))
         
@@ -402,7 +436,7 @@ class TestCharacter(CharacterEntity):
         dx, dy = our_pos[0], our_pos[1]
         start = (dx, dy)
         goal = self.findGoal(wrld)
-        #print("Goal " + str(goal)) 
+        #print("Goal " + str(goal))
         
         
 
