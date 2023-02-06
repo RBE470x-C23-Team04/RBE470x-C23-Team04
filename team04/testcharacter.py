@@ -8,6 +8,7 @@ from priority_queue import PriorityQueue
 from world import World
 from sensed_world import SensedWorld
 import math
+from node import Node
 
 class TestCharacter(CharacterEntity):
 
@@ -67,9 +68,7 @@ class TestCharacter(CharacterEntity):
         # print(pose)
         # return pose
         
-        
-
-
+    
     @staticmethod
     def euclidean_distance(x1, y1, x2, y2):
         """
@@ -84,6 +83,7 @@ class TestCharacter(CharacterEntity):
         out = math.sqrt((x2-x1)**2 + (y2-y1)**2)
         #print(f'{x1-x2}')
         return out
+    
     
     @staticmethod
     def neighbors_of_8(wrld, x, y):
@@ -113,6 +113,7 @@ class TestCharacter(CharacterEntity):
 
         return retNeighbors
     
+    
     @staticmethod
     def neighbors_of_16(wrld, x, y):
         """_summary_
@@ -123,7 +124,8 @@ class TestCharacter(CharacterEntity):
             y (_type_): _description_
         """
         
-        allNeighbors = []
+        allNeighbors = [(x-2, y-2), (x-2, y-1), (x-2, y), (x-2, y+1), (x-2, y+2), (x-1, y-2), (x-1, y+2), (x, y-2),
+                        (x+1, y-2), (x+1, y+2), (x+2, y-2), (x+2, y-1), (x+2, y), (x+2, y+1), (x+2, y+2), (x, y+2)]
         
         mapWidth = wrld.width()
         mapHeight = wrld.height()
@@ -241,6 +243,12 @@ class TestCharacter(CharacterEntity):
         dy = go[1] - pos[1]
         self.move(dx,dy)
 
+
+    def expectimax(self, wrld, new_wrld, pose_list):
+        
+        
+        pass
+    
 
     def do(self, wrld):
         #m = next(iter(wrld.monsters.values()))
