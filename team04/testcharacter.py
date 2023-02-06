@@ -189,6 +189,21 @@ class TestCharacter(CharacterEntity):
             goal = cfrom
         return findPath
         
+    
+    def isMonsterNear(self, wrld, new_wrld, point):
+        x = point[0]
+        y = point[1]
+        
+        state = False
+        
+        for i in TestCharacter.neighbors_of_8(wrld, x, y):
+            if (new_wrld.monsters_at(i[0],i[1]) != None):
+                state = True
+                print("Monster nearby " + str(i))
+                
+        return state
+                
+
     def minimax(self, wrld, new_wrld, new_wrld2, pose_list):
         print("worlds")
         wrld.printit()
@@ -196,42 +211,137 @@ class TestCharacter(CharacterEntity):
         new_wrld2.printit()
         print("minimax!")
     
-        mini = {}
+        mini_1 = {} # 1 layer deep
+        mini_2 = {} # 2 layers deep
+        mini_3 = {} # 3 layers deep
+        
+        score_1 = 0 # 1 layer deep
+        score_2 = 0 # 2 layers deep
+        score_3 = 0 # 3 layers deep
+        
         pos = self.findCharacterPos(wrld, "me")
         
+        
+        
         for i in TestCharacter.neighbors_of_8(wrld, pos[0], pos[1]):
-            monsters = new_wrld.monsters_at(i[0],i[1])
-            monsters2 = new_wrld2.monsters_at(i[0],i[1])
-
-            explosion = new_wrld.explosion_at(i[0],i[1])
-            explosion2 = new_wrld2.explosion_at(i[0],i[1])
-
+            monsters = wrld.monsters_at(i[0],i[1])
+            explosion = wrld.explosion_at(i[0],i[1])
             bomb = wrld.bomb_at(i[0],i[1])
-
-            empty = new_wrld.empty_at(i[0],i[1])
-
-            score = 0
-            if(monsters != None or monsters2 != None):
-                #self.place_bomb()
-                score -= 100
-            if i in pose_list:
-                score += 10
-            if (explosion != None): #or explosion2 != None): #or bomb != None or explosion2 != None or bomb2 != None):
-                 score -= 50
-            if(bomb == None):
-                score += 90
-
-            #elif(empty):
-                #score += 30
+            # score = 0
             
-            mini[i] = score
-        print("mini: " + str(mini))
+            if(monsters != None or self.isMonsterNear(wrld, new_wrld, i)):
+                #self.place_bomb()
+                score_1 -= 100
+            if i in pose_list:
+                score_1 += 10
+            if (explosion != None): #or explosion2 != None): #or bomb != None or explosion2 != None or bomb2 != None):
+                score_1 -= 50
+            # if(bomb == None):
+            #     score += 90
+            
+            mini_1[i] = score_1
+            
+            for ii in TestCharacter.neighbors_of_8(new_wrld, pos[0], pos[1]):
+                monsters1 = new_wrld.monsters_at(i[0],i[1])
+                explosion1 = new_wrld.explosion_at(i[0],i[1])
+                bomb1 = new_wrld.bomb_at(i[0],i[1])
+                # score = 0
+                
+                if(monsters1 != None or self.isMonsterNear(wrld, new_wrld, ii)):
+                    #self.place_bomb()
+                    score_2 -= 100
+                if i in pose_list:
+                    score_2 += 10
+                if (explosion != None): #or explosion2 != None): #or bomb != None or explosion2 != None or bomb2 != None):
+                    score_2 -= 50
+                # if(bomb == None):
+                #     score += 90
+                
+                mini_2[ii] = score_2
+                
+                for iii in TestCharacter.neighbors_of_8(new_wrld2, pos[0], pos[1]):
+                    monsters2 = new_wrld2.monsters_at(i[0],i[1])
+                    explosion2 = new_wrld2.explosion_at(i[0],i[1])
+                    bomb2 = new_wrld2.bomb_at(i[0],i[1])
+                    # score = 0
+                    
+                    if(monsters2 != None or self.isMonsterNear(wrld, new_wrld, iii)):
+                        #self.place_bomb()
+                        score_3 -= 100
+                    if i in pose_list:
+                        score_3 += 10
+                    if (explosion != None): #or explosion2 != None): #or bomb != None or explosion2 != None or bomb2 != None):
+                        score_3 -= 50
+                    # if(bomb == None):
+                    #     score += 90
+                    
+                    mini_3[iii] = score_3
+                
+                value_list_3 = list(mini_3.values())
+                max_3 = value_list_3[0]
+                go_3 = (0,0)
+                for n_3 in mini_3:
+                    if mini_3[n_3] > max_3:
+                        max_3 = mini_3[n_3]
+                        go_3 = n_3
+                
+                mini_2[ii] += max_3
+                
+            value_list_2 = list(mini_2.values())
+            max_2 = value_list_2[0]
+            go_2 = (0,0)
+            for n_2 in mini_2:
+                if mini_2[n_2] > max_2:
+                    max_2 = mini_2[n_2]
+                    go_2 = n_2
+            
+            mini_1[i] += max_2
+            
+        
+        # for i in TestCharacter.neighbors_of_8(wrld, pos[0], pos[1]):
+        #     monsters = new_wrld.monsters_at(i[0],i[1])
+        #     monsters2 = new_wrld2.monsters_at(i[0],i[1])
 
-        max = 0
+        #     explosion = new_wrld.explosion_at(i[0],i[1])
+        #     explosion2 = new_wrld2.explosion_at(i[0],i[1])
+
+        #     bomb = wrld.bomb_at(i[0],i[1])
+
+        #     empty = new_wrld.empty_at(i[0],i[1])
+
+        #     score = 0
+        #     if(monsters != None or monsters2 != None or self.isMonsterNear(wrld, new_wrld, i)):
+        #         #self.place_bomb()
+        #         score -= 100
+        #     if i in pose_list:
+        #         score += 10
+        #     if (explosion != None): #or explosion2 != None): #or bomb != None or explosion2 != None or bomb2 != None):
+        #          score -= 50
+        #     # if(bomb == None):
+        #     #     score += 90
+
+        #     #elif(empty):
+        #         #score += 30
+            
+        #     mini[i] = score
+            
+        print("mini_1: " + str(mini_1))
+        print("mini_2: " + str(mini_2))
+        print("mini_3: " + str(mini_3))
+        
+        # max = -1
+        # go = (0,0)
+        # for i in mini:
+        #     if mini[i] > max:
+        #         max = mini[i]
+        #         go = i
+        
+        value_list = list(mini_1.values())
+        max = value_list[0]
         go = (0,0)
-        for i in mini:
-            if mini[i] > max:
-                max = mini[i]
+        for i in mini_1:
+            if mini_1[i] > max:
+                max = mini_1[i]
                 go = i
         print("Go to " + str(go))
         if(go == (0,0)):
@@ -243,8 +353,29 @@ class TestCharacter(CharacterEntity):
 
 
     def expectimax(self, wrld, new_wrld, pose_list):
+        root = Node.newNode(0)
+        root.moveNone = Node.newNode(0)
+        root.moveN = Node.newNode(0)
+        root.moveNE = Node.newNode(0)
+        root.moveE = Node.newNode(0)
+        root.moveSE = Node.newNode(0)
+        root.moveS = Node.newNode(0)
+        root.moveSW = Node.newNode(0)
+        root.moveW = Node.newNode(0)
+        root.moveNW = Node.newNode(0)
+        root.placeBomb = Node.newNode(0)
+    
+        # Assigning values to Leaf nodes
         
         
+        
+        root.left.left = Node.newNode(10)
+        root.left.right = Node.newNode(10)
+        root.right.left = Node.newNode(9)
+        root.right.right = Node.newNode(100)
+    
+        res = Node.expectimax(root, True)
+        print("Expectimax value is "+ str(res))
         pass
     
 
@@ -328,7 +459,7 @@ class TestCharacter(CharacterEntity):
             move_x = pose[0] - dx
             move_y = pose[1] - dy
             
-            print("New Pose: " + str(move_x) + ", " + str(move_y))
+            print("New Pose: " + str(pose[0]) + ", " + str(pose[1]))
          
             self.move(move_x, move_y)
       
