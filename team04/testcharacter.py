@@ -1,5 +1,5 @@
 # This is necessary to find the main code
-import sys
+import sys, os
 sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
@@ -21,7 +21,15 @@ class TestCharacter(CharacterEntity):
         
     #     # self.goal = self.findGoal(wrld)
     
-    
+    # Disable
+    def blockPrint():
+        sys.stdout = open(os.devnull, 'w')
+
+    # Restore
+    def enablePrint():
+        sys.stdout = sys.__stdout__
+        
+    # blockPrint()
 
 
     def findGoal(self, wrld):
@@ -325,7 +333,7 @@ class TestCharacter(CharacterEntity):
             #new_wrld.me(self).move(move_x,move_y)
             self.move(move_x, move_y)
             
-      
+    
             
             
         
