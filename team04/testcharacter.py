@@ -227,6 +227,7 @@ class TestCharacter(CharacterEntity):
 
             score = 0
             if(monsters or monsters2 or self.isMonsterNear(wrld, new_wrld, i)):
+                print("PLACE BOMB at " + str(pos[0]) + ", " + str(pos[1]))
                 self.place_bomb()
                 score -= 100
             if i in pose_list:
@@ -332,9 +333,17 @@ class TestCharacter(CharacterEntity):
             print("New Pose: " + str(move_x) + ", " + str(move_y))
             #new_wrld.me(self).move(move_x,move_y)
             self.move(move_x, move_y)
-            
-    
-            
+        
+        
+        new_wrld.next()
+        our_pos = self.findCharacterPos(new_wrld, "me")
+        print("Me's pose: " + str(our_pos[0]) + ", " + str(our_pos[1]))
+        print("")
+        print("")
+        print("")
+        print("")
+        print("")
+        # wrld.printit()
             
         
            

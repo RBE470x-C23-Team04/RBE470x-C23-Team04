@@ -126,7 +126,7 @@ for i in range(seed_range_lower,seed_range_higher+1):
     # print("Mod check" + str(5%2))
     
     # percent = int(((i*100)/seed_count))
-    percent = ((i*100)/seed_count)
+    percent = (((i-seed_count)*100)/seed_count)
     # if ((percent % 10) == 0):
     print("Progress: " + str(percent) + "%")
     

@@ -34,13 +34,14 @@ from testcharacter import TestCharacter
 ### Uncomment below to run the variant with various seeds.
 
 # Set inputs:
-seed_range_lower = 1
-seed_range_higher = 1000
+seed_range_lower = 1036
+seed_range_higher = 1101
 
 
 success_cnt = 0
 seed_outcome = {}
-seed_count = seed_range_higher - seed_range_lower + 1
+seed_diff = seed_range_higher - seed_range_lower
+seed_count = seed_diff + 1
 
 # Disable
 def blockPrint():
@@ -51,7 +52,7 @@ def enablePrint():
     sys.stdout = sys.__stdout__
     
 # enablePrint()
-blockPrint()
+# blockPrint()
 
 for i in range(seed_range_lower,seed_range_higher+1):
     random.seed(i)
@@ -73,7 +74,7 @@ for i in range(seed_range_lower,seed_range_higher+1):
     # print("Seed " + str(i))
     
     # blockPrint()
-    g.go(1)
+    g.go(0)
     # enablePrint()
     
     events = g.events
@@ -108,15 +109,12 @@ for i in range(seed_range_lower,seed_range_higher+1):
     
     
     enablePrint()
-    
-    # print("Mod check" + str(5%2))
-    
     # percent = int(((i*100)/seed_count))
-    percent = ((i*100)/seed_count)
+    # percent = ((i-seed_range_lower+1)/(seed_range_lower-seed_count-2))*100
+    percent = ((i-(seed_range_lower-1))/(seed_count))*100
     # if ((percent % 10) == 0):
-    print("Progress: " + str(percent) + "%")
-    
-    blockPrint()
+    print("Progress: " + str(round(percent,2)) + "%" + " Seed: " + str(i))
+    # blockPrint()
     
     
 for ii in range(seed_range_lower,seed_range_higher+1):
