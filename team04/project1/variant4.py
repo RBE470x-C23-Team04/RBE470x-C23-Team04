@@ -9,7 +9,7 @@ from game import Game
 from monsters.selfpreserving_monster import SelfPreservingMonster
 
 # TODO This is your code!
-sys.path.insert(1, '../teamNN')
+sys.path.insert(1, '../team04')
 from testcharacter import TestCharacter
 #924 124 134 673 913 824 924 412
 #144 231 610 481
