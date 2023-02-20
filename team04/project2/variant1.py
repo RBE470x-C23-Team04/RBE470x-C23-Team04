@@ -9,7 +9,8 @@ from game import Game
 # TODO This is your code!
 sys.path.insert(1, '../teamNN')
 from testcharacter import TestCharacter
-
+# Uncomment this if you want the interactive character
+#from interactivecharacter import InteractiveCharacter
 
 # Create the game
 g = Game.fromfile('map.txt')
@@ -19,6 +20,12 @@ g.add_character(TestCharacter("me", # name
                               "C",  # avatar
                               0, 0  # position
 ))
+# Uncomment this if you want the interactive character
+# g.add_character(InteractiveCharacter("me", # name
+#                                      "C",  # avatar
+#                                      0, 0  # position
+# ))
+
 
 # Run!
-g.go()
+g.go(0)

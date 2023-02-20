@@ -83,7 +83,10 @@ class TestCharacter(CharacterEntity):
         out = math.sqrt((x2-x1)**2 + (y2-y1)**2)
         #print(f'{x1-x2}')
         return out
-    
+
+    def manhattan_distance(x1, y1, x2, y2):
+        out = (abs(x2-x1)+abs(y2-y1))
+        return out
     
     @staticmethod
     def neighbors_of_8(wrld, x, y):
@@ -95,7 +98,7 @@ class TestCharacter(CharacterEntity):
             y (_type_): _description_
         """
         ##create the array of all 4 possible values (x,y)
-        allNeighbors = [(x+1, y+1), (x, y+1), (x-1, y+1), (x+1, y), (x-1, y), (x+1, y-1), (x, y-1), (x-1, y-1)]
+        allNeighbors = [(x+1, y+1), (x, y+1), (x-1, y+1), (x+1, y), (x-1, y), (x+1, y-1), (x, y-1), (x-1, y-1), (x,y)]
 
         ##check through that list to ensure they are all in the map.
         #get the size of the ocupancy grid
@@ -145,7 +148,21 @@ class TestCharacter(CharacterEntity):
                     
         #print("retNeighbors: " + str(retNeighbors))
         return retNeighbors
+
+    @staticmethod
+    def neighbors_of_bomb(wrld, x, y):
+        mapWidth = wrld.width()
+        mapHeight = wrld.height()
+        neighbors = [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
+        retNeighbors = []
+        for neighbor in neighbors:
+            if(neighbor[0] >= 0) and (neighbor[0] < mapWidth) and (neighbor[1] >= 0) and (neighbor[1] < mapHeight):
+                if not wrld.wall_at(neighbor[0],neighbor[1]):
+                    #add the items to ret list
+                    retNeighbors.append(neighbor)
+        return retNeighbors
         
+
     
     def a_star(self, wrld, start, goal):
         '''
@@ -176,6 +193,11 @@ class TestCharacter(CharacterEntity):
     
     
     def find_path(self, cameFrom, start, goal):
+        cameFromKey = list(cameFrom.keys())
+        if(goal not in cameFromKey):
+            goal = cameFromKey[-1]
+            print("goal" + str(goal))
+
         findPath = []
         findPath.append(goal)
         while start != goal:
@@ -205,11 +227,18 @@ class TestCharacter(CharacterEntity):
 
         mini = {}
         pos = self.findCharacterPos(wrld, "me")
+        bomb_radius = []
+        if(wrld.bomb_at(pos[0],pos[1])):
+            bomb_radius = TestCharacter.neighbors_of_bomb(wrld, pos[0], pos[1])
+            print("bomb radius " + str(bomb_radius))
+            #for i in TestCharacter.neighbors_of_bomb(wrld, pos[0], pos[1]):
+                
         
         for i in TestCharacter.neighbors_of_8(wrld, pos[0], pos[1]):
             monsters = new_wrld.monsters_at(i[0],i[1])
             monsters2 = new_wrld2.monsters_at(i[0],i[1])
 
+            explosion3 = wrld.explosion_at(i[0],i[1])
             explosion = new_wrld.explosion_at(i[0],i[1])
             explosion2 = new_wrld2.explosion_at(i[0],i[1])
             
@@ -223,14 +252,19 @@ class TestCharacter(CharacterEntity):
                 score -= 100
             if i in pose_list:
                 score += 10
-            if (explosion or explosion2): 
-                 score -= 50
+            if (explosion or explosion2 or explosion3): 
+                print("explosion " + str(i))
+                score -= 50
             if(bomb or bomb2 or bom):
                 score -= 90
+            if(wrld.wall_at(i[0],i[1])):
+                score -= 50
+            if(wrld.bomb_at(pos[0],pos[1])):
+                if(i in bomb_radius):
+                    score -= 100
             
             mini[i] = score
         print("mini: " + str(mini))
-
         max = -1
         go = (0,0)
         for i in mini:
@@ -243,12 +277,19 @@ class TestCharacter(CharacterEntity):
         dy = go[1] - pos[1]
         self.move(dx,dy)
 
+    # def QLearn(self,wrld):
+    #     our_pos = self.findCharacterPos(wrld, "me")
+    #     goal = self.findGoal(wrld)
+    #     monster = self.findMonsterPos(wlrd)
 
-    def expectimax(self, wrld, new_wrld, pose_list):
+    #     we = .1
+    #     wm = .1
+
         
-        
-        pass
-    
+    #     de = self.manhattan_distance(our_pos[0],our_pos[1], goal[0], goal[1])
+    #     dm = 
+    #     Q = we*de + wm*dm
+
 
     def do(self, wrld):
         #m = next(iter(wrld.monsters.values()))
@@ -273,10 +314,17 @@ class TestCharacter(CharacterEntity):
 
         
         cameFrom = self.a_star(wrld, start, goal)
+        print("comefrom" + str(cameFrom))
         pose_list = self.find_path(cameFrom, start, goal)
         # pose_list = pose_list.reverse()
         pose_list = list(reversed(pose_list))
+        print("path" + str(pose_list))
         
+        if(wrld.wall_at(pose_list[1][0], pose_list[1][1])):
+            self.place_bomb()
+
+
+
         #print(pose_list)
         monster = False
         sw = SensedWorld.next(wrld)
