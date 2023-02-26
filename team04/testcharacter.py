@@ -9,6 +9,8 @@ from world import World
 from sensed_world import SensedWorld
 import math
 from node import Node
+from bank import bank1
+
 
 class TestCharacter(CharacterEntity):
 
@@ -37,7 +39,27 @@ class TestCharacter(CharacterEntity):
                     foundGoal = True
         return goal
     
-    
+    def findMonsterPos(self, wrld, name):
+        """_summary_
+        Args:
+            wrld (_type_): _description_
+        Returns:
+            _type_: _description_
+        """
+        
+        world_width = wrld.width()
+        world_height = wrld.height()
+        for x in range(0,world_width):
+            for y in range(0,world_height):
+                list = wrld.monsters_at(x,y)
+                # print(str(list))
+                if list is not None:
+                    for item in list:
+                        if item.name == name:
+                            monster_pose = (x,y)
+                            print("HERE " + str(monster_pose))           
+        return monster_pose
+
     def findCharacterPos(self, wrld, name):
         """_summary_
 
@@ -195,8 +217,9 @@ class TestCharacter(CharacterEntity):
     def find_path(self, cameFrom, start, goal):
         cameFromKey = list(cameFrom.keys())
         if(goal not in cameFromKey):
-            goal = cameFromKey[-1]
+            goal = cameFromKey[2]
             print("goal" + str(goal))
+            
 
         findPath = []
         findPath.append(goal)
@@ -220,10 +243,8 @@ class TestCharacter(CharacterEntity):
         return state
 
     def minimax(self, wrld, new_wrld, new_wrld2, pose_list):
-       
+        
         print("minimax!")
-        sw3 = SensedWorld.next(new_wrld2)
-        new_wrld3 = sw3[0]
 
         mini = {}
         pos = self.findCharacterPos(wrld, "me")
@@ -231,8 +252,7 @@ class TestCharacter(CharacterEntity):
         if(wrld.bomb_at(pos[0],pos[1])):
             bomb_radius = TestCharacter.neighbors_of_bomb(wrld, pos[0], pos[1])
             print("bomb radius " + str(bomb_radius))
-            #for i in TestCharacter.neighbors_of_bomb(wrld, pos[0], pos[1]):
-                
+  
         
         for i in TestCharacter.neighbors_of_8(wrld, pos[0], pos[1]):
             monsters = new_wrld.monsters_at(i[0],i[1])
@@ -247,50 +267,135 @@ class TestCharacter(CharacterEntity):
             bomb2 = new_wrld2.bomb_at(i[0],i[1])
 
             score = 0
-            if(monsters or monsters2 or self.isMonsterNear(wrld, new_wrld, i)):
+            if(monsters or monsters2): #self.isMonsterNear(wrld, new_wrld, i)):
                 self.place_bomb()
-                score -= 100
+                score -= 30
             if i in pose_list:
                 score += 10
             if (explosion or explosion2 or explosion3): 
                 print("explosion " + str(i))
                 score -= 50
             if(bomb or bomb2 or bom):
-                score -= 90
+                score -= 200
             if(wrld.wall_at(i[0],i[1])):
                 score -= 50
             if(wrld.bomb_at(pos[0],pos[1])):
                 if(i in bomb_radius):
-                    score -= 100
+                    score -= 110
+            # if(self.trap(wrld,i[0],i[1])):
+            #     score-=20
+            # if(not self.wallAround(wrld,i[0],i[1])):
+            #     score += 20
+            
             
             mini[i] = score
-        print("mini: " + str(mini))
-        max = -1
-        go = (0,0)
-        for i in mini:
-            if mini[i] > max:
-                max = mini[i]
-                go = i
-        print("Go to " + str(go))
+        #print("mini: " + str(mini))
+
+        go = self.QLearn(wrld,new_wrld,new_wrld2,mini)
+
+        # max = -1000
+        # go = (0,0)
+        # for i in mini:
+        #     if mini[i] > max:
+        #         max = mini[i]
+        #         go = i
+        # print("Go to " + str(go))
        
         dx = go[0] - pos[0]
         dy = go[1] - pos[1]
         self.move(dx,dy)
 
-    # def QLearn(self,wrld):
-    #     our_pos = self.findCharacterPos(wrld, "me")
-    #     goal = self.findGoal(wrld)
-    #     monster = self.findMonsterPos(wlrd)
 
-    #     we = .1
-    #     wm = .1
+    def checkWall(self,wrld,dx,dy):
+        mapWidth = wrld.width()
+        if(dx-1 <= -1):
+            if(wrld.wall_at(dx,dy+1) and wrld.wall_at(dx+1,dy+1)):
+                return True
+        elif(dx+1 > mapWidth):
+            if(wrld.wall_at(dx,dy+1) and wrld.wall_at(dx-1,dy+1)):
+                return True
+        else:
+            if(wrld.wall_at(dx,dy+1) and wrld.wall_at(dx+1,dy+1) and wrld.wall_at(dx-1,dy+1)):
+                return True
+        return False
+
+    def findBomb(self,wrld,x,y):
+        fb = 1
+        if(wrld.bomb_at(x,y)):
+            fb = -100
+        for i in TestCharacter.neighbors_of_8(wrld,x,y):
+            if(wrld.bomb_at(i[0],i[1])):
+                fb = -100
+        return fb
+
+    def findExplosion(self,wrld, new_wrld, new_wrld2,x,y):
+        fx = 1
+        explosion3 = wrld.explosion_at(x,y)
+        explosion = new_wrld.explosion_at(x,y)
+        explosion2 = new_wrld2.explosion_at(x,y)
+        if(explosion3 or explosion2 or explosion):
+            fx += -1
+        for i in TestCharacter.neighbors_of_8(wrld,x,y):
+            explosion3 = wrld.explosion_at(i[0],i[1])
+            explosion = new_wrld.explosion_at(i[0],i[1])
+            explosion2 = new_wrld2.explosion_at(i[0],i[1])
+            if(explosion3 or explosion2 or explosion):
+                fx += -1
+        return fx
+
+
+    def QLearn(self,wrld,new_wrld, new_wrld2,mini):
+        alpha = .2
+        gamma = .1
+
+        our_pos = self.findCharacterPos(wrld, "me")
+        goal = self.findGoal(wrld)
+        monsterA = self.findMonsterPos(wrld,"selfpreserving")
+        #monsterB = self.findMonsterPos(wrld, "stupid")
+
+        we = bank1.we
+        wm = bank1.wm
+        wb = bank1.wb
+        wx = bank1.wx
+
+        fei = 1/(self.euclidean_distance(our_pos[0], our_pos[1], goal[0], goal[1]))
+        fmi = 1/(self.euclidean_distance(our_pos[0], our_pos[1], monsterA[0], monsterA[1]))
+        fbi = self.findBomb(wrld, our_pos[0], our_pos[1])
+        fxi = self.findExplosion(wrld,new_wrld,new_wrld2, our_pos[0], our_pos[1])
+
+        Qi = we*fei + wm*fmi + wb*fbi + wx*fxi
+
+        QPrime = {}
+        for k,v in mini.items():
+            fe = 1/(self.euclidean_distance(k[0], k[1], goal[0], goal[1]))
+            fm = 1/(self.euclidean_distance(k[0], k[1], monsterA[0], monsterA[1]))
+            fb = self.findBomb(wrld, k[0], k[1])
+            fx = self.findExplosion(wrld,new_wrld,new_wrld2, k[0], k[1])
+
+            Qval = we*fe + wm*fm + wb*fb + wx*fx
+            QPrime[k] = Qval
+        print("Qvals: " + str(QPrime))
+        max = -1000
+        go = (0,0)
+        for i in QPrime:
+            if QPrime[i] > max:
+                max = QPrime[i]
+                go = i
+
+        r = mini[go]
+        delta = (r + gamma*max) - Qi
+
+        bank1.we = we + (alpha*delta*fei)
+        bank1.wm = wm + (alpha*delta*fmi)
+        bank1.wb = wb + (alpha*delta*fbi)
+        bank1.wx = wx + (alpha*delta*fxi)
+
+        print("we: " + str(bank1.we) + ", wm: " + str(bank1.wm) + ", wb: " + str(bank1.wb) + ", wx: " + str(bank1.wx))
+        print("go: " + str(go))
+        return go
 
         
-    #     de = self.manhattan_distance(our_pos[0],our_pos[1], goal[0], goal[1])
-    #     dm = 
-    #     Q = we*de + wm*dm
-
-
+        
     def do(self, wrld):
         #m = next(iter(wrld.monsters.values()))
         # if not foundGoal:
@@ -299,7 +404,6 @@ class TestCharacter(CharacterEntity):
         # print("ME: " + str(wrld.me(self)))
         
         our_pos = self.findCharacterPos(wrld, "me")
-     
         
 
         # i = input("HELLO?")
@@ -308,20 +412,21 @@ class TestCharacter(CharacterEntity):
         dx, dy = our_pos[0], our_pos[1]
         start = (dx, dy)
         goal = self.findGoal(wrld)
-        #print("Goal " + str(goal)) 
+        #print("Goal " + str(goal))
+        print(dx,dy) 
        
         
 
         
         cameFrom = self.a_star(wrld, start, goal)
-        print("comefrom" + str(cameFrom))
+        #print("comefrom" + str(cameFrom))
         pose_list = self.find_path(cameFrom, start, goal)
         # pose_list = pose_list.reverse()
         pose_list = list(reversed(pose_list))
-        print("path" + str(pose_list))
+        #print("path" + str(pose_list))
         
-        if(wrld.wall_at(pose_list[1][0], pose_list[1][1])):
-            self.place_bomb()
+        #if(wrld.wall_at(pose_list[1][0], pose_list[1][1])):
+            #self.place_bomb()
 
 
 
@@ -338,6 +443,8 @@ class TestCharacter(CharacterEntity):
             self.minimax(wrld, new_wrld, new_wrld2, pose_list)
             monster = True
 
+        
+
         for next in self.neighbors_of_16(wrld, dx, dy):
             monsters = new_wrld.monsters_at(next[0],next[1])
             monsters2 = new_wrld2.monsters_at(next[0],next[1])
@@ -347,9 +454,14 @@ class TestCharacter(CharacterEntity):
 
             bomb = new_wrld.bomb_at(next[0],next[1])
 
-            if(monsters or monsters2 or bomb or explosion or explosion2):
+            if(monsters or monsters2 or bomb or explosion or explosion2): #or self.wallAround(wrld,next[0],next[1])):
                 self.minimax(wrld,new_wrld, new_wrld2, pose_list)
                 monster = True
+                break
+
+        if(self.checkWall(wrld,dx,dy) and monster == False):
+            print("bomb")
+            self.place_bomb()
 
         # Clear past A* path
         world_width = wrld.width()
@@ -369,7 +481,7 @@ class TestCharacter(CharacterEntity):
             move_x = pose[0] - dx
             move_y = pose[1] - dy
             
-            print("New Pose: " + str(move_x) + ", " + str(move_y))
+            #print("New Pose: " + str(move_x) + ", " + str(move_y))
             #new_wrld.me(self).move(move_x,move_y)
             self.move(move_x, move_y)
             
