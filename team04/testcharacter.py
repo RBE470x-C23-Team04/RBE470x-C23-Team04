@@ -46,7 +46,7 @@ class TestCharacter(CharacterEntity):
         Returns:
             _type_: _description_
         """
-        
+        monster_pose = (-1,-1)
         world_width = wrld.width()
         world_height = wrld.height()
         for x in range(0,world_width):
@@ -320,37 +320,38 @@ class TestCharacter(CharacterEntity):
         return False
 
     def findBomb(self,wrld,x,y):
-        fb = 1
+        fb = 0
         if(wrld.bomb_at(x,y)):
-            fb = -100
+            fb = 10
         for i in TestCharacter.neighbors_of_8(wrld,x,y):
             if(wrld.bomb_at(i[0],i[1])):
-                fb = -100
+                fb = 10
         return fb
 
     def findExplosion(self,wrld, new_wrld, new_wrld2,x,y):
-        fx = 1
+        fx = 0
         explosion3 = wrld.explosion_at(x,y)
         explosion = new_wrld.explosion_at(x,y)
         explosion2 = new_wrld2.explosion_at(x,y)
         if(explosion3 or explosion2 or explosion):
-            fx += -1
+            fx += 10
         for i in TestCharacter.neighbors_of_8(wrld,x,y):
             explosion3 = wrld.explosion_at(i[0],i[1])
             explosion = new_wrld.explosion_at(i[0],i[1])
             explosion2 = new_wrld2.explosion_at(i[0],i[1])
             if(explosion3 or explosion2 or explosion):
-                fx += -1
+                fx += 10
         return fx
 
 
     def QLearn(self,wrld,new_wrld, new_wrld2,mini):
-        alpha = .2
-        gamma = .1
+        alpha = .01
+        gamma = .01
 
         our_pos = self.findCharacterPos(wrld, "me")
         goal = self.findGoal(wrld)
-        monsterA = self.findMonsterPos(wrld,"selfpreserving")
+        monsterA = self.findMonsterPos(wrld,"aggressive")
+
         #monsterB = self.findMonsterPos(wrld, "stupid")
 
         we = bank1.we
@@ -358,37 +359,52 @@ class TestCharacter(CharacterEntity):
         wb = bank1.wb
         wx = bank1.wx
 
-        fei = 1/(self.euclidean_distance(our_pos[0], our_pos[1], goal[0], goal[1]))
-        fmi = 1/(self.euclidean_distance(our_pos[0], our_pos[1], monsterA[0], monsterA[1]))
+        fei = 1/(1+self.euclidean_distance(our_pos[0], our_pos[1], goal[0], goal[1]))
+        if(monsterA != (-1,-1)):
+            fmi = 1/(1+self.euclidean_distance(our_pos[0], our_pos[1], monsterA[0], monsterA[1]))
+        else:
+            fmi = 0
         fbi = self.findBomb(wrld, our_pos[0], our_pos[1])
         fxi = self.findExplosion(wrld,new_wrld,new_wrld2, our_pos[0], our_pos[1])
-
+        print("fxi: " + str(fxi))
         Qi = we*fei + wm*fmi + wb*fbi + wx*fxi
 
         QPrime = {}
         for k,v in mini.items():
-            fe = 1/(self.euclidean_distance(k[0], k[1], goal[0], goal[1]))
-            fm = 1/(self.euclidean_distance(k[0], k[1], monsterA[0], monsterA[1]))
+            fe = 1/(1+self.euclidean_distance(k[0], k[1], goal[0], goal[1]))
+            if(monsterA != (-1,-1)):
+                fm = 1/(1+self.euclidean_distance(k[0], k[1], monsterA[0], monsterA[1]))
+            else:
+                fm = 0
             fb = self.findBomb(wrld, k[0], k[1])
             fx = self.findExplosion(wrld,new_wrld,new_wrld2, k[0], k[1])
 
             Qval = we*fe + wm*fm + wb*fb + wx*fx
             QPrime[k] = Qval
+
         print("Qvals: " + str(QPrime))
-        max = -1000
-        go = (0,0)
+        keys = list(QPrime.keys())
+        max = QPrime[keys[0]]
+        go = keys[0]
         for i in QPrime:
             if QPrime[i] > max:
                 max = QPrime[i]
                 go = i
 
-        r = mini[go]
+        r = -100
+        print("r: " + str(r) + ", max: " + str(max*gamma) + ", Qi: " + str(Qi))
         delta = (r + gamma*max) - Qi
 
         bank1.we = we + (alpha*delta*fei)
         bank1.wm = wm + (alpha*delta*fmi)
+        # if((wm + (alpha*delta*fmi)) > 0):
+        #     bank1.wm = -bank1.wm
         bank1.wb = wb + (alpha*delta*fbi)
+        # if((wb + (alpha*delta*fbi)) > 0):
+        #     bank1.wb = -bank1.wb
         bank1.wx = wx + (alpha*delta*fxi)
+        # if((wx + (alpha*delta*fxi)) > 0):
+        #     bank1.wx = -bank1.wx
 
         print("we: " + str(bank1.we) + ", wm: " + str(bank1.wm) + ", wb: " + str(bank1.wb) + ", wx: " + str(bank1.wx))
         print("go: " + str(go))
@@ -439,7 +455,7 @@ class TestCharacter(CharacterEntity):
         new_wrld2 = sw2[0]
 
 
-        if(new_wrld.monsters_at(dx,dy) != None or new_wrld2.monsters_at(dx,dy) != None):
+        if(new_wrld.monsters_at(dx,dy) or new_wrld2.monsters_at(dx,dy)):
             self.minimax(wrld, new_wrld, new_wrld2, pose_list)
             monster = True
 
@@ -462,6 +478,7 @@ class TestCharacter(CharacterEntity):
         if(self.checkWall(wrld,dx,dy) and monster == False):
             print("bomb")
             self.place_bomb()
+            self.minimax(wrld,new_wrld, new_wrld2, pose_list)
 
         # Clear past A* path
         world_width = wrld.width()

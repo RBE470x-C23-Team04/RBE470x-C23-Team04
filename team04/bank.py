@@ -1,9 +1,9 @@
 class Bank():
     def __init__(self):
         self.we = .1
-        self.wm = -.1
-        self.wb = -.1
-        self.wx = -.1
+        self.wm = -.5
+        self.wb = -.3
+        self.wx = -.4
     
     def getWe(self):
         return self.we
