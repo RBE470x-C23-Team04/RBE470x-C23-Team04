@@ -14,9 +14,9 @@ sys.path.insert(1, '../teamNN')
 from testcharacter import TestCharacter
 
 # Create the game
-#462, 313, 573, 674, 784, 785, 798
-#231, 842, 735, 246, 654, 953, 786, 412, 687, 112, 563, 235, 475
-random.seed(462) # TODO Change this if you want different random choices
+#420, 264, 720, 426
+#369, 563
+random.seed(426) # TODO Change this if you want different random choices
 g = Game.fromfile('map.txt')
 g.add_monster(StupidMonster("stupid", # name
                             "S",      # avatar

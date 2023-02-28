@@ -1,15 +1,16 @@
 class Bank():
     def __init__(self):
-        self.we = .1
-        self.wm = -.5
+        self.we = .3
+        self.wma = -.5
+        self.wmb = -.5
         self.wb = -.3
-        self.wx = -.4
+        self.wx = -.2
     
     def getWe(self):
         return self.we
     
-    def getWm(self):
-        return self.wm
+    def getWma(self):
+        return self.wma
 
     def getWb(self):
         return self.wb
@@ -21,8 +22,8 @@ class Bank():
     def setWe(self,value):
         self.we = value
     
-    def setWm(self,value):
-        self.wm = value
+    def setWma(self,value):
+        self.wma = value
 
     def setWb(self,value):
         self.wb = value

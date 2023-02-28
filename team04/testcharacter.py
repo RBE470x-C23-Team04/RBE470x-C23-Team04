@@ -106,10 +106,6 @@ class TestCharacter(CharacterEntity):
         #print(f'{x1-x2}')
         return out
 
-    def manhattan_distance(x1, y1, x2, y2):
-        out = (abs(x2-x1)+abs(y2-y1))
-        return out
-    
     @staticmethod
     def neighbors_of_8(wrld, x, y):
         """_summary_
@@ -311,7 +307,7 @@ class TestCharacter(CharacterEntity):
         if(dx-1 <= -1):
             if(wrld.wall_at(dx,dy+1) and wrld.wall_at(dx+1,dy+1)):
                 return True
-        elif(dx+1 > mapWidth):
+        elif(dx+2 > mapWidth):
             if(wrld.wall_at(dx,dy+1) and wrld.wall_at(dx-1,dy+1)):
                 return True
         else:
@@ -322,10 +318,10 @@ class TestCharacter(CharacterEntity):
     def findBomb(self,wrld,x,y):
         fb = 0
         if(wrld.bomb_at(x,y)):
-            fb = 10
+            fb = 1
         for i in TestCharacter.neighbors_of_8(wrld,x,y):
             if(wrld.bomb_at(i[0],i[1])):
-                fb = 10
+                fb = 1
         return fb
 
     def findExplosion(self,wrld, new_wrld, new_wrld2,x,y):
@@ -334,52 +330,73 @@ class TestCharacter(CharacterEntity):
         explosion = new_wrld.explosion_at(x,y)
         explosion2 = new_wrld2.explosion_at(x,y)
         if(explosion3 or explosion2 or explosion):
-            fx += 10
+            fx += 1
         for i in TestCharacter.neighbors_of_8(wrld,x,y):
             explosion3 = wrld.explosion_at(i[0],i[1])
             explosion = new_wrld.explosion_at(i[0],i[1])
             explosion2 = new_wrld2.explosion_at(i[0],i[1])
             if(explosion3 or explosion2 or explosion):
-                fx += 10
+                fx += 1
         return fx
 
+    def getMonsters(self,wrld):
+        monsters = ["aggressive", "stupid","selfpreserving"]
+        currMonPos = {}
+        for i in monsters:
+            if(self.findMonsterPos(wrld,i) != (-1,-1)):
+                currMonPos[i] = self.findMonsterPos(wrld,i)
+        return currMonPos
 
     def QLearn(self,wrld,new_wrld, new_wrld2,mini):
         alpha = .01
         gamma = .01
-
+        monsters = self.getMonsters(wrld)
         our_pos = self.findCharacterPos(wrld, "me")
         goal = self.findGoal(wrld)
-        monsterA = self.findMonsterPos(wrld,"aggressive")
 
-        #monsterB = self.findMonsterPos(wrld, "stupid")
+        monsterPoses = list(monsters.values())
+        monsterNames = list(monsters.keys())
+        print(monsters)
+        if(len(monsterNames)>0):
+            monsterA = self.findMonsterPos(wrld,monsterNames[0])
+        if(len(monsterNames)>1):
+            monsterB = self.findMonsterPos(wrld,monsterNames[1])
 
         we = bank1.we
-        wm = bank1.wm
+        wma = bank1.wma
+        wmb = bank1.wmb
         wb = bank1.wb
         wx = bank1.wx
 
         fei = 1/(1+self.euclidean_distance(our_pos[0], our_pos[1], goal[0], goal[1]))
-        if(monsterA != (-1,-1)):
-            fmi = 1/(1+self.euclidean_distance(our_pos[0], our_pos[1], monsterA[0], monsterA[1]))
+        if(len(monsterNames)>0):
+            fmai = 1/(1+self.euclidean_distance(our_pos[0], our_pos[1], monsterA[0], monsterA[1]))
         else:
-            fmi = 0
+            fmai = 0
+        if(len(monsterNames)>1):
+            fmbi = 1/(1+self.euclidean_distance(our_pos[0], our_pos[1], monsterB[0], monsterB[1]))
+        else:
+            fmbi = 0
         fbi = self.findBomb(wrld, our_pos[0], our_pos[1])
         fxi = self.findExplosion(wrld,new_wrld,new_wrld2, our_pos[0], our_pos[1])
         print("fxi: " + str(fxi))
-        Qi = we*fei + wm*fmi + wb*fbi + wx*fxi
+        Qi = we*fei + wma*fmai + wmb*fmbi + wb*fbi + wx*fxi
 
         QPrime = {}
         for k,v in mini.items():
             fe = 1/(1+self.euclidean_distance(k[0], k[1], goal[0], goal[1]))
-            if(monsterA != (-1,-1)):
-                fm = 1/(1+self.euclidean_distance(k[0], k[1], monsterA[0], monsterA[1]))
+            if(len(monsterNames)>0):
+                fma = 1/(1+self.euclidean_distance(k[0], k[1], monsterA[0], monsterA[1]))
             else:
-                fm = 0
+                fma = 0
+            if(len(monsterNames)>1):
+                fmb = 1/(1+self.euclidean_distance(k[0], k[1], monsterB[0], monsterB[1]))
+            else:
+                fmb = 0
             fb = self.findBomb(wrld, k[0], k[1])
             fx = self.findExplosion(wrld,new_wrld,new_wrld2, k[0], k[1])
 
-            Qval = we*fe + wm*fm + wb*fb + wx*fx
+            Qval = we*fe + wma*fma + wmb*fmb + wb*fb + wx*fx
             QPrime[k] = Qval
 
         print("Qvals: " + str(QPrime))
@@ -391,22 +408,18 @@ class TestCharacter(CharacterEntity):
                 max = QPrime[i]
                 go = i
 
-        r = -100
+        r = -10
         print("r: " + str(r) + ", max: " + str(max*gamma) + ", Qi: " + str(Qi))
         delta = (r + gamma*max) - Qi
 
         bank1.we = we + (alpha*delta*fei)
-        bank1.wm = wm + (alpha*delta*fmi)
-        # if((wm + (alpha*delta*fmi)) > 0):
-        #     bank1.wm = -bank1.wm
+        bank1.wma = wma + (alpha*delta*fmai)
+        bank1.wmb = wmb + (alpha*delta*fmbi)
         bank1.wb = wb + (alpha*delta*fbi)
-        # if((wb + (alpha*delta*fbi)) > 0):
-        #     bank1.wb = -bank1.wb
         bank1.wx = wx + (alpha*delta*fxi)
-        # if((wx + (alpha*delta*fxi)) > 0):
-        #     bank1.wx = -bank1.wx
+     
 
-        print("we: " + str(bank1.we) + ", wm: " + str(bank1.wm) + ", wb: " + str(bank1.wb) + ", wx: " + str(bank1.wx))
+        print("we: " + str(bank1.we) + ", wma: " + str(bank1.wma)+ ", wmb: " + str(bank1.wmb) + ", wb: " + str(bank1.wb) + ", wx: " + str(bank1.wx))
         print("go: " + str(go))
         return go
 
