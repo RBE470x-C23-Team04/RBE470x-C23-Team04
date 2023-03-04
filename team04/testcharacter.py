@@ -10,6 +10,7 @@ from sensed_world import SensedWorld
 import math
 from node import Node
 from bank import bank1
+from characterMovement import visited_points
 
 
 class TestCharacter(CharacterEntity):
@@ -324,7 +325,7 @@ class TestCharacter(CharacterEntity):
                 fb = 1
         return fb
 
-    def findExplosion(self,wrld, new_wrld, new_wrld2,x,y):
+    def findExplosion(self, wrld, new_wrld, new_wrld2,x,y):
         fx = 0
         explosion3 = wrld.explosion_at(x,y)
         explosion = new_wrld.explosion_at(x,y)
@@ -347,7 +348,19 @@ class TestCharacter(CharacterEntity):
                 currMonPos[i] = self.findMonsterPos(wrld,i)
         return currMonPos
 
-    def QLearn(self,wrld,new_wrld, new_wrld2,mini):
+    def QLearn(self,wrld,new_wrld,new_wrld2,mini):
+        """Approx. Q-Learn Algorithm.
+
+        Args:
+            wrld (_type_): current/present world
+            new_wrld (_type_): one step ahead of present world
+            new_wrld2 (_type_): two steps ahead of present world
+            mini (dict): minimax score
+
+        Returns:
+            tuple: point to go to with highest score
+        """
+        
         alpha = .01
         gamma = .01
         monsters = self.getMonsters(wrld)
@@ -367,6 +380,12 @@ class TestCharacter(CharacterEntity):
         wmb = bank1.wmb
         wb = bank1.wb
         wx = bank1.wx
+        print("weights")
+        print("bank1.we " + str(bank1.we))
+        print("bank1.wma " + str(bank1.wma))
+        print("bank1.wmb " + str(bank1.wmb))
+        print("bank1.wb " + str(bank1.wb))
+        print("bank1.wx " + str(bank1.wx))
 
         fei = 1/(1+self.euclidean_distance(our_pos[0], our_pos[1], goal[0], goal[1]))
         if(len(monsterNames)>0):
@@ -408,7 +427,8 @@ class TestCharacter(CharacterEntity):
                 max = QPrime[i]
                 go = i
 
-        r = -10
+        r = -1 #-10 living cost
+        
         print("r: " + str(r) + ", max: " + str(max*gamma) + ", Qi: " + str(Qi))
         delta = (r + gamma*max) - Qi
 
@@ -426,6 +446,12 @@ class TestCharacter(CharacterEntity):
         
         
     def do(self, wrld):
+        """Main function for character
+
+        Args:
+            wrld (_type_): current world
+        """
+        
         #m = next(iter(wrld.monsters.values()))
         # if not foundGoal:
         #     goal = self.findGoal(wrld)
@@ -434,7 +460,8 @@ class TestCharacter(CharacterEntity):
         
         our_pos = self.findCharacterPos(wrld, "me")
         
-
+        
+        
         # i = input("HELLO?")
         
         # dx, dy = 0, 0 # starting pos
@@ -442,9 +469,9 @@ class TestCharacter(CharacterEntity):
         start = (dx, dy)
         goal = self.findGoal(wrld)
         #print("Goal " + str(goal))
-        print(dx,dy) 
-       
+        print(dx,dy)
         
+        visited_points.movement.append((dx,dy))
 
         
         cameFrom = self.a_star(wrld, start, goal)
@@ -484,14 +511,14 @@ class TestCharacter(CharacterEntity):
             bomb = new_wrld.bomb_at(next[0],next[1])
 
             if(monsters or monsters2 or bomb or explosion or explosion2): #or self.wallAround(wrld,next[0],next[1])):
-                self.minimax(wrld,new_wrld, new_wrld2, pose_list)
+                self.minimax(wrld, new_wrld, new_wrld2, pose_list)
                 monster = True
                 break
 
         if(self.checkWall(wrld,dx,dy) and monster == False):
             print("bomb")
             self.place_bomb()
-            self.minimax(wrld,new_wrld, new_wrld2, pose_list)
+            self.minimax(wrld, new_wrld, new_wrld2, pose_list)
 
         # Clear past A* path
         world_width = wrld.width()

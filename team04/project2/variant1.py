@@ -7,7 +7,7 @@ sys.path.insert(1, '..')
 from game import Game
 
 # TODO This is your code!
-sys.path.insert(1, '../teamNN')
+sys.path.insert(2, '../team04')
 from testcharacter import TestCharacter
 # Uncomment this if you want the interactive character
 # from interactivecharacter import InteractiveCharacter
