@@ -9,6 +9,8 @@ from world import World
 from sensed_world import SensedWorld
 import math
 from node import Node
+# from variant1 import bank1
+from bank import bank1
 
 class TestCharacter(CharacterEntity):
 
@@ -103,7 +105,7 @@ class TestCharacter(CharacterEntity):
             y (_type_): _description_
         """
         ##create the array of all 4 possible values (x,y)
-        allNeighbors = [(x+1, y+1), (x, y+1), (x-1, y+1), (x+1, y), (x-1, y), (x+1, y-1), (x, y-1), (x-1, y-1)]
+        allNeighbors = [(x+1, y+1), (x, y+1), (x-1, y+1), (x+1, y), (x-1, y), (x+1, y-1), (x, y-1), (x-1, y-1), (x,y)]
 
         ##check through that list to ensure they are all in the map.
         #get the size of the ocupancy grid
@@ -268,6 +270,21 @@ class TestCharacter(CharacterEntity):
         our_pos = self.findCharacterPos(wrld, "me")
      
         
+        # bank1 = Bank(0)
+        # v1 = bank1.we
+        # print("bank value " + str(v1))
+        # bank1.we = v1+5
+        # v2 = bank1.we
+        # print("bank new value " + str(v2))
+        
+     
+     
+        store = wrld.scores().items()
+        print("Scores " + str(store))
+        
+        
+        
+        
 
         # i = input("HELLO?")
         
@@ -275,16 +292,18 @@ class TestCharacter(CharacterEntity):
         dx, dy = our_pos[0], our_pos[1]
         start = (dx, dy)
         goal = self.findGoal(wrld)
-        #print("Goal " + str(goal)) 
+        print("Goal " + str(goal)) 
        
         
 
         
         cameFrom = self.a_star(wrld, start, goal)
+        # print("here 11")
         pose_list = self.find_path(cameFrom, start, goal)
+        # print("here 12")
         # pose_list = pose_list.reverse()
         pose_list = list(reversed(pose_list))
-        
+        # print("here 13")
         #print(pose_list)
         monster = False
         sw = SensedWorld.next(wrld)
@@ -293,6 +312,7 @@ class TestCharacter(CharacterEntity):
         sw2 = SensedWorld.next(new_wrld)
         new_wrld2 = sw2[0]
 
+        print("here0")
 
         if(new_wrld.monsters_at(dx,dy) != None or new_wrld2.monsters_at(dx,dy) != None):
             self.minimax(wrld, new_wrld, new_wrld2, pose_list)
@@ -308,8 +328,9 @@ class TestCharacter(CharacterEntity):
             bomb = new_wrld.bomb_at(next[0],next[1])
 
             if(monsters or monsters2 or bomb or explosion or explosion2):
-                self.minimax(wrld,new_wrld, new_wrld2, pose_list)
+                self.minimax(wrld, new_wrld, new_wrld2, pose_list)
                 monster = True
+            # print("here1")
 
         # Clear past A* path
         world_width = wrld.width()
@@ -317,10 +338,13 @@ class TestCharacter(CharacterEntity):
         for x in range(0,world_width):
             for y in range(0,world_height):
                 self.set_cell_color(x, y, Fore.BLACK + Back.BLACK)
+                # print("here 2a")
+            # print("here 2b")
         
         # Draw A* path
         for cell in pose_list:
             self.set_cell_color(cell[0], cell[1], Fore.RED + Back.GREEN)
+            # print("here 3")
         
         
         #print("Our Pose: " + str(dx) + ", " + str(dy))
@@ -332,6 +356,8 @@ class TestCharacter(CharacterEntity):
             print("New Pose: " + str(move_x) + ", " + str(move_y))
             #new_wrld.me(self).move(move_x,move_y)
             self.move(move_x, move_y)
+            
+        # print("here 4")
             
     
             
