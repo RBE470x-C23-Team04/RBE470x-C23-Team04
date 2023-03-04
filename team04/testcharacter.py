@@ -14,22 +14,16 @@ from bank import bank1
 
 class TestCharacter(CharacterEntity):
 
-    # def __init__(self,name,avatar,x_pos,y_pos):
-    #     '''
-    #     '''
-    #     print("A")
-        
-    #     # wrld = SenseWorld.from_world(w)       
-        
-    #     # self.goal = self.findGoal(wrld)
     
-    
-
-
     def findGoal(self, wrld):
-        '''
-        Run once to find world exit.
-        '''
+        """Run once to find world exit.
+
+        Args:
+            wrld (_type_): present game state
+
+        Returns:
+            goal (tuple): (x,y) cell of Exit
+        """
         world_width = wrld.width()
         world_height = wrld.height()
         for x in range(0,world_width):
@@ -39,12 +33,14 @@ class TestCharacter(CharacterEntity):
                     foundGoal = True
         return goal
     
+    
     def findMonsterPos(self, wrld, name):
-        """_summary_
+        """Find the cell of a given name monster.
+        
         Args:
-            wrld (_type_): _description_
+            wrld (_type_): present game state
         Returns:
-            _type_: _description_
+            monster_pose (tuple): (x,y)
         """
         monster_pose = (-1,-1)
         world_width = wrld.width()
@@ -60,14 +56,15 @@ class TestCharacter(CharacterEntity):
                             print("HERE " + str(monster_pose))           
         return monster_pose
 
+
     def findCharacterPos(self, wrld, name):
-        """_summary_
+        """Find the cell of a given name character.
 
         Args:
-            wrld (_type_): _description_
+            wrld (_type_): present game state
 
         Returns:
-            _type_: _description_
+            me_character_pose (tuple): (x,y)
         """
         
         world_width = wrld.width()
@@ -79,18 +76,11 @@ class TestCharacter(CharacterEntity):
                 if list is not None:
                     for item in list:
                         if item.name == name:
-                            me_character_pose = (x,y)
-                            print("HERE " + str(me_character_pose))
-        # return 1            
-        return me_character_pose
+                            character_pose = (x,y)
+                            print("HERE " + str(character_pose))            
+        return character_pose
         
-        # pose = []
         
-        # pose = wrld.me(self)
-        # print(pose)
-        # return pose
-        
-    
     @staticmethod
     def euclidean_distance(x1, y1, x2, y2):
         """
@@ -103,17 +93,19 @@ class TestCharacter(CharacterEntity):
         """
 
         out = math.sqrt((x2-x1)**2 + (y2-y1)**2)
-        #print(f'{x1-x2}')
+
         return out
+
 
     @staticmethod
     def neighbors_of_8(wrld, x, y):
-        """_summary_
+        """Returns a list of valid open cells around a given tuple (x,y)
+        of radius 1
 
         Args:
-            wrld (_type_): _description_
-            x (_type_): _description_
-            y (_type_): _description_
+            wrld (_type_): present game state
+            x (int): X coordinate of cell
+            y (int): Y coordinate of cell
         """
         ##create the array of all 4 possible values (x,y)
         allNeighbors = [(x+1, y+1), (x, y+1), (x-1, y+1), (x+1, y), (x-1, y), (x+1, y-1), (x, y-1), (x-1, y-1), (x,y)]
@@ -137,12 +129,13 @@ class TestCharacter(CharacterEntity):
     
     @staticmethod
     def neighbors_of_16(wrld, x, y):
-        """_summary_
+        """Returns a list of valid open cells around a given tuple (x,y)
+        of radius 2 (does not include neighbors of 8)
 
         Args:
-            wrld (_type_): _description_
-            x (_type_): _description_
-            y (_type_): _description_
+            wrld (_type_): present game state
+            x (int): X coordinate of cell
+            y (int): Y coordinate of cell
         """
         
         allNeighbors = [(x-2, y-2), (x-2, y-1), (x-2, y), (x-2, y+1), (x-2, y+2), (x-1, y-2), (x-1, y+2), (x, y-2),
@@ -167,8 +160,20 @@ class TestCharacter(CharacterEntity):
         #print("retNeighbors: " + str(retNeighbors))
         return retNeighbors
 
+
     @staticmethod
     def neighbors_of_bomb(wrld, x, y):
+        """Returns a list of four open cells up/down/left/right around 
+        a bomb of radius 1
+
+        Args:
+            wrld (_type_): present game state
+            x (int): X coordinate of cell
+            y (int): Y coordinate of cell
+
+        Returns:
+            retNeightbors (list): four open cells around a bomb
+        """
         mapWidth = wrld.width()
         mapHeight = wrld.height()
         neighbors = [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
@@ -180,11 +185,18 @@ class TestCharacter(CharacterEntity):
                     retNeighbors.append(neighbor)
         return retNeighbors
         
-
     
     def a_star(self, wrld, start, goal):
-        '''
-        '''
+        """A* Path Planning
+
+        Args:
+            wrld (_type_): present game state
+            start (tuple): (x,y)
+            goal (tuple): (x,y)
+
+        Returns:
+            cameFrom (dict): Dictionary of points with keys of values
+        """
         
         frontier = PriorityQueue()
         frontier.put(start, 0)
@@ -211,6 +223,18 @@ class TestCharacter(CharacterEntity):
     
     
     def find_path(self, cameFrom, start, goal):
+        """Next step of A*.
+        Takes the cameFrom dictionary and forms a path while appending
+        start (x,y) at the beginning and goal (x,y) at the end
+
+        Args:
+            cameFrom (dict): dictionary from A*
+            start (tuple): (x,y) Starting cell
+            goal (tuple): (x,y) Exit cell
+
+        Returns:
+            findPath (dict): Path - (x,y) points to follow
+        """
         cameFromKey = list(cameFrom.keys())
         if(goal not in cameFromKey):
             goal = cameFromKey[2]
@@ -225,7 +249,19 @@ class TestCharacter(CharacterEntity):
             goal = cfrom
         return findPath
 
+
     def isMonsterNear(self, wrld, new_wrld, point):
+        """Detects if a monster will enter a valid neightbor of 8 of point
+        given on the next game state.
+
+        Args:
+            wrld (_type_): present game state
+            new_wrld (_type_): next game state
+            point (tuple): (x,y) (usually present character cell)
+
+        Returns:
+            state (boolean): True if monster becomes near
+        """
         x = point[0]
         y = point[1]
         
@@ -238,7 +274,17 @@ class TestCharacter(CharacterEntity):
                 
         return state
 
+
     def minimax(self, wrld, new_wrld, new_wrld2, pose_list):
+        """Decides which direction the character should go based on the 
+        highest value of a cell within neightbors of 8.
+
+        Args:
+            wrld (_type_): present game state
+            new_wrld (_type_): next game state
+            new_wrld2 (_type_): next+1 game state
+            pose_list (list): List of path from findPath after A*
+        """
         
         print("minimax!")
 
@@ -303,6 +349,16 @@ class TestCharacter(CharacterEntity):
 
 
     def checkWall(self,wrld,dx,dy):
+        """Checks if there is a wall at given x, y values.
+
+        Args:
+            wrld (_type_): present game state
+            dx (int): X coordinate
+            dy (int): Y coordinate
+
+        Returns:
+            (boolean): True if wall at given x, y values
+        """
         mapWidth = wrld.width()
         if(dx-1 <= -1):
             if(wrld.wall_at(dx,dy+1) and wrld.wall_at(dx+1,dy+1)):
@@ -315,7 +371,19 @@ class TestCharacter(CharacterEntity):
                 return True
         return False
 
+
     def findBomb(self,wrld,x,y):
+        """Count amount of bombs in a neighbors of 8 and at current
+        (x,y) cell.
+
+        Args:
+            wrld (_type_): present game state
+            x (int): X coordinate
+            y (int): Y coordinate
+
+        Returns:
+            fb (int): Total count of bombs
+        """
         fb = 0
         if(wrld.bomb_at(x,y)):
             fb = 1
@@ -324,7 +392,21 @@ class TestCharacter(CharacterEntity):
                 fb = 1
         return fb
 
+
     def findExplosion(self,wrld, new_wrld, new_wrld2,x,y):
+        """Count of explosions in world states of current, next, and 
+        following.
+
+        Args:
+            wrld (_type_): present game state
+            new_wrld (_type_): next game state
+            new_wrld2 (_type_): following game state
+            x (int): X coordinate
+            y (int): Y coordinate
+
+        Returns:
+            fx (int): Total count of explosions
+        """
         fx = 0
         explosion3 = wrld.explosion_at(x,y)
         explosion = new_wrld.explosion_at(x,y)
@@ -339,7 +421,17 @@ class TestCharacter(CharacterEntity):
                 fx += 1
         return fx
 
+
     def getMonsters(self,wrld):
+        """Get a dictionary of all monsters with their name as key and 
+        their (x,y) cell as item.
+
+        Args:
+            wrld (_type_): present game state
+
+        Returns:
+            currMonPos (dict): Dictionary of all monsters present
+        """
         monsters = ["aggressive", "stupid","selfpreserving"]
         currMonPos = {}
         for i in monsters:
@@ -347,7 +439,19 @@ class TestCharacter(CharacterEntity):
                 currMonPos[i] = self.findMonsterPos(wrld,i)
         return currMonPos
 
+
     def QLearn(self,wrld,new_wrld, new_wrld2,mini):
+        """Approximate Q-Learning Algorithm
+
+        Args:
+            wrld (_type_): present game state
+            new_wrld (_type_): next game state
+            new_wrld2 (_type_): following game state
+            mini (dict): Dictionary of scores
+
+        Returns:
+            go (x,y): Which (x,y) cell for the character to go to
+        """
         alpha = .01
         gamma = .01
         monsters = self.getMonsters(wrld)
@@ -424,8 +528,12 @@ class TestCharacter(CharacterEntity):
         return go
 
         
-        
     def do(self, wrld):
+        """Main character function
+
+        Args:
+            wrld (_type_): present game state
+        """
         #m = next(iter(wrld.monsters.values()))
         # if not foundGoal:
         #     goal = self.findGoal(wrld)
@@ -514,10 +622,4 @@ class TestCharacter(CharacterEntity):
             #print("New Pose: " + str(move_x) + ", " + str(move_y))
             #new_wrld.me(self).move(move_x,move_y)
             self.move(move_x, move_y)
-            
-      
-            
-            
-        
-           
-        
+                  
